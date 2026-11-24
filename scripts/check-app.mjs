@@ -12,7 +12,7 @@ assert.equal(ids.length, new Set(ids).size, "Les identifiants HTML doivent être
 
 for (const id of ["textMode", "imageMode", "imageSection", "prompt", "duration", "generateButton", "notice", "resultSection", "resultVideo", "downloadLink", "progressPanel", "progressBar", "progressTitle", "progressDetail", "progressState"]) {
   assert.ok(ids.includes(id), "Élément HTML manquant : " + id);
-  assert.ok(app.includes('$("#' + id + '")') || app.includes('$("#' + id + '")'.replace("#", "")) || app.includes('$("#' + id + '")'), "Élément non relié dans app.js : " + id);
+  assert.ok(app.includes(' $("' + id + '")') || app.includes('$("' + id + '")'), "Élément non relié dans app.js : " + id);
 }
 
 for (const stage of ["connecting", "queued", "generating", "receiving", "done"]) {
