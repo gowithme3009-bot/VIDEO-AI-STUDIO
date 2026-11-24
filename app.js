@@ -24,6 +24,45 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
 
   let mode = "text", selectedImage = null, imageObjectUrl = null, generating = false;
 
+  const QUOTA_STORAGE_KEY = "videoAiStudio.zeroGpuQuotaDetectedAt";
+  const QUOTA_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+  function getQuotaCooldownRemaining() {
+    try {
+      const detectedAt = Number(localStorage.getItem(QUOTA_STORAGE_KEY));
+      if (!Number.isFinite(detectedAt) || detectedAt <= 0) return 0;
+      const remaining = QUOTA_COOLDOWN_MS - (Date.now() - detectedAt);
+      if (remaining <= 0) {
+        localStorage.removeItem(QUOTA_STORAGE_KEY);
+        return 0;
+      }
+      return remaining;
+    } catch {
+      return 0;
+    }
+  }
+
+  function isZeroGpuQuotaError(error) {
+    const message = typeof error === "string"
+      ? error
+      : [error && error.message, error && error.details, error && error.cause]
+          .filter(Boolean).join(" ");
+    return /you(?:'ve| have) hit your daily zerogpu limit|zerogpu.{0,100}(?:quota|limit)|(?:quota|limit).{0,100}zerogpu|daily.{0,80}(?:gpu|quota|limit)|you have exceeded your.*(?:runs )?limit/i.test(message);
+  }
+
+  function rememberZeroGpuQuota() {
+    try {
+      localStorage.setItem(QUOTA_STORAGE_KEY, String(Date.now()));
+    } catch {
+      // The current request still receives the quota-specific message if storage is unavailable.
+    }
+  }
+
+  function formatCooldown(remaining) {
+    const hours = Math.max(1, Math.ceil(remaining / (60 * 60 * 1000)));
+    return hours + " h environ";
+  }
+
   function setFormLocked(locked) {
     textMode.disabled = locked;
     imageMode.disabled = locked;
@@ -173,6 +212,12 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
 
   async function generate() {
     if (generating) return;
+    const quotaRemaining = getQuotaCooldownRemaining();
+    if (quotaRemaining > 0) {
+      setProgress("error", "La limite quotidienne ZeroGPU a été atteinte. Le délai de sécurité local expire dans " + formatCooldown(quotaRemaining) + ".");
+      showMessage("Quota gratuit ZeroGPU épuisé. Pour éviter des appels inutiles, VIDEO AI STUDIO bloque les nouveaux essais pendant " + formatCooldown(quotaRemaining) + ". Aucun abonnement PRO n'est nécessaire.", "error");
+      return;
+    }
     const requestMode = mode;
     const requestImage = selectedImage;
     const seconds = Number(duration.value);
@@ -211,16 +256,22 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
       showMessage("Le service a retourné une vidéo. Vous pouvez la visionner ou la télécharger.", "success");
     } catch (error) {
       console.error("VIDEO AI STUDIO:", error);
-      const detail = error && error.message ? error.message : "Erreur inconnue.";
-      setProgress("error", detail);
-      showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
-      const space = requestMode === "image" ? SPACE_I2V : SPACE_T2V;
-      const link = document.createElement("a");
-      link.href = "https://huggingface.co/spaces/" + space;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = " Ouvrir le moteur sur Hugging Face";
-      notice.appendChild(link);
+      const detail = error && error.message ? error.message : String(error || "Erreur inconnue.");
+      if (isZeroGpuQuotaError(error)) {
+        rememberZeroGpuQuota();
+        setProgress("error", "Le quota quotidien gratuit ZeroGPU de Hugging Face est épuisé.");
+        showMessage("Quota quotidien ZeroGPU épuisé. Les moteurs gratuits Hugging Face ne peuvent plus lancer de génération avec ce quota. VIDEO AI STUDIO suspend les nouveaux essais pendant 24 h à partir de ce message pour éviter les appels inutiles. Vous n'avez pas besoin de souscrire à PRO.", "error");
+      } else {
+        setProgress("error", detail);
+        showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
+        const space = requestMode === "image" ? SPACE_I2V : SPACE_T2V;
+        const link = document.createElement("a");
+        link.href = "https://huggingface.co/spaces/" + space;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = " Ouvrir le moteur sur Hugging Face";
+        notice.appendChild(link);
+      }
     } finally {
       generating = false;
       setFormLocked(false);
