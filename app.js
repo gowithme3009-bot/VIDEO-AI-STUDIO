@@ -112,11 +112,11 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
       showMessage("Connexion à Hugging Face. Le service gratuit peut être momentanément indisponible...");
       let client, inputs;
       if (mode === "image") {
-        client = await Client.connect(SPACE_I2V);
+        client = await Client.connect(SPACE_I2V, { events: ["status", "data"] });
         const image = await handle_file(selectedImage);
         inputs = [image, text, 6, "", seconds, 1, 1, 42, true];
       } else {
-        client = await Client.connect(SPACE_T2V);
+        client = await Client.connect(SPACE_T2V, { events: ["status", "data"] });
         inputs = [text, "", seconds, 1, 3, 4, 42, true];
       }
       const data = await collectSubmission(client, inputs);
