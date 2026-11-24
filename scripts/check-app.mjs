@@ -10,7 +10,7 @@ const readme = readFileSync("README.md", "utf8");
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
 assert.equal(ids.length, new Set(ids).size, "Les identifiants HTML doivent être uniques.");
 
-for (const id of ["textMode", "imageMode", "imageSection", "prompt", "duration", "generateButton", "notice", "resultSection", "resultVideo", "downloadLink", "progressPanel", "progressBar", "progressTitle", "progressDetail"]) {
+for (const id of ["textMode", "imageMode", "imageSection", "prompt", "duration", "generateButton", "notice", "resultSection", "resultVideo", "downloadLink", "progressPanel", "progressBar", "progressTitle", "progressDetail", "progressState"]) {
   assert.ok(ids.includes(id), "Élément HTML manquant : " + id);
   assert.ok(app.includes('$("' + id + '")'), "Élément non relié dans app.js : " + id);
 }
@@ -24,6 +24,8 @@ assert.match(app, /stage === "complete"/, "Le statut Gradio complete doit être 
 assert.match(app, /stage === "pending"/, "Le statut Gradio pending doit être reconnu.");
 assert.match(app, /stage === "generating"/, "Le statut Gradio generating doit être reconnu.");
 assert.match(app, /stage === "error"/, "Le statut Gradio error doit être reconnu.");
+assert.match(app, /return event\.data;/, "Le résultat final doit terminer immédiatement la lecture du flux Gradio.");
+assert.match(app, /progressState\.textContent = stage === "done"/, "Le libellé d’état doit refléter la fin ou l’arrêt.");
 assert.match(app, /option\.disabled = Number\(option\.value\) > 5/, "Les durées supérieures à 5 s doivent être désactivées.");
 assert.match(app, /mastaP\/wan22-remix-sfw-t2v/, "Le moteur T2V de test doit être configuré.");
 assert.match(app, /zerogpu-aoti\/wan2-2-fp8da-aoti-faster/, "Le moteur I2V d'origine doit être conservé.");
