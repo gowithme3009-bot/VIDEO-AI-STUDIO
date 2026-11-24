@@ -24,6 +24,15 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
 
   let mode = "text", selectedImage = null, imageObjectUrl = null, generating = false;
 
+  function setFormLocked(locked) {
+    textMode.disabled = locked;
+    imageMode.disabled = locked;
+    prompt.disabled = locked;
+    imageInput.disabled = locked;
+    removeImage.disabled = locked;
+    duration.disabled = locked;
+  }
+
   const progressLabels = {
     connecting: ["Connexion au moteur IA", "Contact du service Hugging Face..."],
     queued: ["En attente dans la file", "Le service prépare votre tour. Le délai dépend de la disponibilité."],
@@ -163,25 +172,29 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   }
 
   async function generate() {
+    if (generating) return;
+    const requestMode = mode;
+    const requestImage = selectedImage;
+    const seconds = Number(duration.value);
     const text = prompt.value.trim();
     if (!text) { showMessage("Veuillez écrire une description de votre vidéo.", "error"); prompt.focus(); return; }
-    if (mode === "image" && !selectedImage) { showMessage("Ajoutez une image avant de continuer.", "error"); return; }
+    if (requestMode === "image" && !requestImage) { showMessage("Ajoutez une image avant de continuer.", "error"); return; }
 
     generating = true;
+    setFormLocked(true);
     generateButton.disabled = true;
     generateButton.textContent = "Connexion au moteur IA...";
     resultSection.classList.add("hidden");
     resultVideo.removeAttribute("src");
     setProgress("connecting");
-    const seconds = Number(duration.value);
 
     try {
       showMessage("Connexion à Hugging Face. Le service gratuit peut être momentanément indisponible...");
       setProgress("connecting");
       let client, inputs;
-      if (mode === "image") {
+      if (requestMode === "image") {
         client = await Client.connect(SPACE_I2V, { events: ["status", "data"] });
-        const image = await handle_file(selectedImage);
+        const image = await handle_file(requestImage);
         inputs = [image, text, 6, "", seconds, 1, 1, 42, true];
       } else {
         client = await Client.connect(SPACE_T2V, { events: ["status", "data"] });
@@ -201,7 +214,7 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
       const detail = error && error.message ? error.message : "Erreur inconnue.";
       setProgress("error", detail);
       showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
-      const space = mode === "image" ? SPACE_I2V : SPACE_T2V;
+      const space = requestMode === "image" ? SPACE_I2V : SPACE_T2V;
       const link = document.createElement("a");
       link.href = "https://huggingface.co/spaces/" + space;
       link.target = "_blank";
@@ -210,6 +223,7 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
       notice.appendChild(link);
     } finally {
       generating = false;
+      setFormLocked(false);
       generateButton.disabled = false;
       generateButton.innerHTML = "<span>✦</span> Générer ma vidéo";
     }
