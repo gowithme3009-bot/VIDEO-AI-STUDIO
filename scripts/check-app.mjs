@@ -27,6 +27,11 @@ assert.match(app, /stage === "pending"/, "Le statut Gradio pending doit être re
 assert.match(app, /stage === "generating"/, "Le statut Gradio generating doit être reconnu.");
 assert.match(app, /stage === "error"/, "Le statut Gradio error doit être reconnu.");
 assert.match(app, /return event\.data;/, "Le résultat final doit terminer immédiatement la lecture du flux Gradio.");
+assert.match(app, /const requestMode = mode;/, "Le mode doit être figé au démarrage de la demande.");
+assert.match(app, /const requestImage = selectedImage;/, "Le fichier image doit être figé au démarrage de la demande.");
+assert.match(app, /setFormLocked\\(true\\)/, "Le formulaire doit être verrouillé pendant la génération.");
+assert.match(app, /setFormLocked\\(false\\)/, "Le formulaire doit être déverrouillé après la génération.");
+assert.match(app, /if \\(generating\\) return;/, "Les doubles lancements doivent être empêchés.");
 assert.match(app, /progressState\.textContent = stage === "done"/, "Le libellé d’état doit refléter la fin ou l’arrêt.");
 assert.match(app, /option\.disabled = Number\(option\.value\) > 5/, "Les durées supérieures à 5 s doivent être désactivées.");
 assert.match(html, /<option value="4">4 secondes<\/option>/, "Une durée courte doit être proposée.");
