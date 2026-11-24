@@ -17,8 +17,45 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   const generateButton = $("generateButton"), notice = $("notice");
   const resultSection = $("resultSection"), resultVideo = $("resultVideo");
   const downloadLink = $("downloadLink");
+  const progressPanel = $("progressPanel"), progressBar = $("progressBar");
+  const progressTitle = $("progressTitle"), progressDetail = $("progressDetail");
+  const progressSteps = Array.from(document.querySelectorAll("[data-progress-step]"));
 
   let mode = "text", selectedImage = null, imageObjectUrl = null, generating = false;
+
+  const progressLabels = {
+    connecting: ["Connexion au moteur IA", "Contact du service Hugging Face..."],
+    queued: ["En attente dans la file", "Le service prépare votre tour. Le délai dépend de la disponibilité."],
+    generating: ["Création de votre vidéo", "Le modèle IA travaille. Cette étape peut prendre plusieurs minutes."],
+    receiving: ["Récupération du résultat", "La vidéo est prête côté moteur, chargement du fichier..."],
+    done: ["Génération terminée", "Votre vidéo est disponible ci-dessous."],
+    error: ["Génération interrompue", "Consultez le message d'erreur ci-dessous."]
+  };
+  const progressOrder = ["connecting", "queued", "generating", "receiving", "done"];
+
+  function setProgress(stage, detail) {
+    const index = progressOrder.indexOf(stage);
+    const labels = progressLabels[stage] || progressLabels.connecting;
+    progressPanel.classList.remove("hidden", "is-error", "is-done");
+    progressPanel.classList.toggle("is-error", stage === "error");
+    progressPanel.classList.toggle("is-done", stage === "done");
+    progressTitle.textContent = labels[0];
+    progressDetail.textContent = detail || labels[1];
+    progressBar.classList.toggle("is-indeterminate", stage !== "done" && stage !== "error");
+    progressBar.style.width = stage === "done" ? "100%" : stage === "error" ? "0%" : "38%";
+    progressSteps.forEach((step) => {
+      const stepIndex = progressOrder.indexOf(step.dataset.progressStep);
+      step.classList.toggle("is-current", stepIndex === index);
+      step.classList.toggle("is-complete", index >= 0 && stepIndex < index);
+    });
+  }
+
+  function resetProgress() {
+    progressPanel.classList.add("hidden");
+    progressBar.style.width = "0%";
+    progressBar.classList.remove("is-indeterminate");
+    progressSteps.forEach((step) => step.classList.remove("is-current", "is-complete"));
+  }
 
   function showMessage(text, type = "info") {
     notice.textContent = text;
@@ -98,11 +135,20 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     for await (const event of submission) {
       if (event.type === "status") {
         const stage = event.stage || (event.status && event.status.stage);
-        if (stage === "pending") showMessage("Demande en attente dans la file du service IA...");
-        else if (stage === "generating") showMessage("Le modèle IA génère votre vidéo. Cela peut prendre plusieurs minutes...");
-        else if (stage === "error") throw new Error(event.message || "Le service IA a signalé une erreur.");
-        else showMessage("Traitement par le service IA...");
+        if (stage === "pending") {
+          setProgress("queued");
+          showMessage("Demande reçue : attente de votre tour dans la file IA...");
+        } else if (stage === "generating") {
+          setProgress("generating");
+          showMessage("Le modèle IA génère votre vidéo. Cela peut prendre plusieurs minutes...");
+        } else if (stage === "error") {
+          throw new Error(event.message || "Le service IA a signalé une erreur.");
+        } else {
+          setProgress("generating", "Le service traite votre demande...");
+          showMessage("Traitement par le service IA...");
+        }
       } else if (event.type === "data" || event.type === "complete") {
+        if (event.type === "complete") setProgress("receiving");
         result = event.data;
       } else if (event.type === "error") {
         throw new Error(event.message || "Le service IA a rencontré une erreur.");
@@ -122,10 +168,12 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     generateButton.textContent = "Connexion au moteur IA...";
     resultSection.classList.add("hidden");
     resultVideo.removeAttribute("src");
+    setProgress("connecting");
     const seconds = Number(duration.value);
 
     try {
       showMessage("Connexion à Hugging Face. Le service gratuit peut être momentanément indisponible...");
+      setProgress("connecting");
       let client, inputs;
       if (mode === "image") {
         client = await Client.connect(SPACE_I2V, { events: ["status", "data"] });
@@ -142,10 +190,12 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
       downloadLink.href = videoUrl;
       resultSection.classList.remove("hidden");
       resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      setProgress("done");
       showMessage("Le service a retourné une vidéo. Vous pouvez la visionner ou la télécharger.", "success");
     } catch (error) {
       console.error("VIDEO AI STUDIO:", error);
       const detail = error && error.message ? error.message : "Erreur inconnue.";
+      setProgress("error", detail);
       showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
       const space = mode === "image" ? SPACE_I2V : SPACE_T2V;
       const link = document.createElement("a");
