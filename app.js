@@ -4,7 +4,7 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   "use strict";
 
   const SPACE_I2V = "zerogpu-aoti/wan2-2-fp8da-aoti-faster";
-  const SPACE_T2V = "zerogpu-aoti/wan2-2-fp8da-aoti";
+  const SPACE_T2V = "mastaP/wan22-remix-sfw-t2v";
   const $ = (id) => document.getElementById(id);
 
   const textMode = $("textMode"), imageMode = $("imageMode");
@@ -12,6 +12,8 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   const counter = $("counter"), imageInput = $("imageInput");
   const imagePreview = $("imagePreview"), uploadMessage = $("uploadMessage");
   const removeImage = $("removeImage"), duration = $("duration");
+  const durationHelp = duration.closest(".field").querySelector(".field-help");
+  const defaultDurationHelp = durationHelp.textContent;
   const generateButton = $("generateButton"), notice = $("notice");
   const resultSection = $("resultSection"), resultVideo = $("resultVideo");
   const downloadLink = $("downloadLink");
@@ -23,6 +25,18 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     notice.className = "notice " + type;
   }
 
+  function updateDurationOptions() {
+    Array.from(duration.options).forEach((option) => {
+      option.disabled = mode === "text" && Number(option.value) > 5;
+    });
+    if (duration.selectedOptions[0] && duration.selectedOptions[0].disabled) {
+      duration.value = "5";
+    }
+    durationHelp.textContent = mode === "text"
+      ? "Le moteur texte vers vidéo accepte des clips de 1 à 5 secondes."
+      : defaultDurationHelp;
+  }
+
   function setMode(nextMode) {
     mode = nextMode;
     textMode.classList.toggle("active", mode === "text");
@@ -30,9 +44,11 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     textMode.setAttribute("aria-pressed", String(mode === "text"));
     imageMode.setAttribute("aria-pressed", String(mode === "image"));
     imageSection.classList.toggle("hidden", mode !== "image");
+    updateDurationOptions();
     showMessage(mode === "text" ? "Mode texte vers vidéo sélectionné." : "Mode image vers vidéo sélectionné.");
   }
 
+  updateDurationOptions();
   textMode.addEventListener("click", () => setMode("text"));
   imageMode.addEventListener("click", () => setMode("image"));
   prompt.addEventListener("input", () => { counter.textContent = prompt.value.length + "/1500"; });
@@ -117,7 +133,8 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
         inputs = [image, text, 6, "", seconds, 1, 1, 42, true];
       } else {
         client = await Client.connect(SPACE_T2V, { events: ["status", "data"] });
-        inputs = [text, "", seconds, 1, 3, 4, 42, true];
+        // API mastaP/wan22-remix-sfw-t2v: prompt, negative prompt, seconds, steps, guidance, seed, randomize.
+        inputs = [text, "", seconds, 8, 1, 42, true];
       }
       const data = await collectSubmission(client, inputs);
       const videoUrl = extractVideoUrl(data);
