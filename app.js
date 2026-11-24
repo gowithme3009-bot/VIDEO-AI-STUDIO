@@ -50,13 +50,6 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     });
   }
 
-  function resetProgress() {
-    progressPanel.classList.add("hidden");
-    progressBar.style.width = "0%";
-    progressBar.classList.remove("is-indeterminate");
-    progressSteps.forEach((step) => step.classList.remove("is-current", "is-complete"));
-  }
-
   function showMessage(text, type = "info") {
     notice.textContent = text;
     notice.className = "notice " + type;
@@ -134,21 +127,28 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     let result = null;
     for await (const event of submission) {
       if (event.type === "status") {
-        const stage = event.stage || (event.status && event.status.stage);
+        const status = event.status;
+        const stage = event.stage || (status && typeof status === "object" ? status.stage : status);
         if (stage === "pending") {
-          setProgress("queued");
+          const position = event.position ?? (status && status.position);
+          const queueInfo = Number.isFinite(position) ? " Position dans la file : " + (position + 1) + "." : "";
+          setProgress("queued", "Le service prépare votre tour." + queueInfo);
           showMessage("Demande reçue : attente de votre tour dans la file IA...");
         } else if (stage === "generating") {
           setProgress("generating");
           showMessage("Le modèle IA génère votre vidéo. Cela peut prendre plusieurs minutes...");
+        } else if (stage === "complete") {
+          setProgress("receiving");
+          showMessage("Le moteur a terminé le calcul. Récupération du fichier vidéo...");
         } else if (stage === "error") {
-          throw new Error(event.message || "Le service IA a signalé une erreur.");
+          const message = event.message || (status && status.message) || "Le service IA a signalé une erreur.";
+          throw new Error(message);
         } else {
           setProgress("generating", "Le service traite votre demande...");
           showMessage("Traitement par le service IA...");
         }
       } else if (event.type === "data" || event.type === "complete") {
-        if (event.type === "complete") setProgress("receiving");
+        setProgress("receiving");
         result = event.data;
       } else if (event.type === "error") {
         throw new Error(event.message || "Le service IA a rencontré une erreur.");
