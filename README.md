@@ -1,26 +1,55 @@
-# VIDEO AI STUDIO
 
-Interface web mobile-first pour préparer des créations **texte vers vidéo** et **image vers vidéo**.
+# 🎬 VIDEO AI STUDIO
 
-## État actuel — V0.1
+**Atelier gratuit de création vidéo IA — Texte vers vidéo et Image vers vidéo.**
 
-Cette version contient :
-- une interface française responsive, adaptée aux téléphones ;
-- une zone de prompt avec compteur ;
-- l'import local d'une image PNG/JPG/WebP (10 Mo max) et son aperçu ;
-- le choix du format 9:16, 16:9 ou 1:1 ;
-- le choix d'une durée cible de 5, 10 ou 15 secondes ;
-- un message explicite lorsque le moteur vidéo n'est pas connecté.
+VIDEO AI STUDIO est une application web conçue pour fonctionner sur ordinateur et Android. Elle permet de préparer des prompts et de générer des vidéos à l'aide de modèles IA accessibles via Hugging Face Spaces.
 
-**Important : cette version ne génère pas encore de vidéo.** Le bouton prépare et valide les paramètres, mais n'appelle aucun moteur IA. Une connexion à un fournisseur d'inférence vidéo compatible sera ajoutée après vérification de ses conditions, quotas, accès depuis Madagascar et exigences éventuelles de clé API.
+## ✨ Fonctionnalités
 
-## Lancer l'application
+- ✍️ Génération vidéo à partir d'un texte.
+- 🖼️ Animation d'une image avec un prompt.
+- ⏱️ Choix de la durée de la vidéo.
+- 👀 Aperçu du résultat.
+- 📥 Téléchargement de la vidéo lorsqu'elle est disponible.
+- 📱 Interface adaptée aux téléphones Android.
+- 🌐 Hébergement possible avec GitHub Pages.
 
-Aucun outil de compilation n'est nécessaire :
-1. Ouvrir `index.html` dans un navigateur, ou publier le dépôt avec GitHub Pages.
-2. Pour GitHub Pages : Settings → Pages → Deploy from a branch → `main` → `/ (root)` → Save.
+## 🧠 Moteurs IA
 
-## Structure
+Le projet utilise des espaces publics Hugging Face basés sur Wan 2.2 :
+
+- **Texte vers vidéo :** [Wan 2.2 Text-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti)
+- **Image vers vidéo :** [Wan 2.2 Image-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster)
+
+La disponibilité dépend des serveurs, des files d'attente et des limites d'utilisation de ces services externes.
+
+## 🚀 Installation et utilisation
+
+1. Ouvrir VIDEO AI STUDIO depuis son site GitHub Pages.
+2. Choisir Texte vers vidéo ou Image vers vidéo.
+3. Écrire une description précise de la scène.
+4. Ajouter une image si le mode Image vers vidéo est sélectionné.
+5. Choisir la durée.
+6. Lancer la génération.
+7. Attendre le résultat, puis télécharger la vidéo si elle est disponible.
+
+## 🌍 Hébergement GitHub Pages
+
+Le projet peut être hébergé gratuitement avec GitHub Pages.
+
+Dans le dépôt :
+
+1. Ouvrir **Settings**.
+2. Sélectionner **Pages**.
+3. Choisir **GitHub Actions** comme source.
+4. Attendre la fin du déploiement.
+
+Adresse prévue du site :
+
+https://gowithme3009-bot.github.io/VIDEO-AI-STUDIO/
+
+## 📁 Structure du projet
 
 ```text
 VIDEO-AI-STUDIO/
@@ -28,19 +57,32 @@ VIDEO-AI-STUDIO/
 ├── styles.css
 ├── app.js
 ├── README.md
+├── LICENSE
+├── .nojekyll
 └── .github/
     └── workflows/
         └── pages.yml
 ```
 
-## Prochaine étape technique
+## 💰 Coût et limites
 
-Créer une couche serveur/proxy ou une intégration sécurisée vers un fournisseur vidéo. Ne jamais placer une clé API secrète dans `app.js`, dans le HTML, dans GitHub Pages ou dans un dépôt public.
+- Le code du projet peut être hébergé gratuitement sur GitHub.
+- GitHub Pages propose un hébergement statique gratuit dans les limites de son offre.
+- Les générations vidéo utilisent des services externes qui peuvent appliquer des quotas, des temps d'attente ou des restrictions.
+- La génération illimitée et gratuite n'est pas garantie.
+- Aucun paiement ni clé API personnelle ne doit être nécessaire pour le fonctionnement prévu de cette version.
 
-## Modèles et licences
+## 🔐 Sécurité
 
-Ce dépôt est une interface originale. Les modèles tels que Wan, LTX-Video ou les outils ComfyUI restent des projets tiers, avec leurs propres licences, conditions d'utilisation, besoins matériels et règles d'accès. Vérifier la licence et les conditions de chaque modèle avant toute intégration.
+Ne jamais placer de mot de passe, clé API ou jeton personnel dans les fichiers publics du dépôt.
 
-## Licence de cette interface
+## 📌 État du projet
 
-MIT — voir `LICENSE`.
+**Version :** 0.3  
+**Statut :** Bêta expérimentale  
+**Publication automatique :** Non  
+**Génération vidéo :** Dépend des espaces Hugging Face disponibles.
+
+---
+
+Créé pour expérimenter la génération vidéo IA avec des outils accessibles et des technologies open source.
