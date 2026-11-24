@@ -21,7 +21,7 @@ for (const stage of ["connecting", "queued", "generating", "receiving", "done"])
 }
 
 assert.match(app, /const status = event\.status/, "Le statut Gradio doit être lu.");
-assert.match(app, /typeof status === "object" \? status\.stage : status/, "Les statuts Gradio chaîne et objet doivent être acceptés.");
+assert.match(app, /status\.stage \|\| status\.status/, "Les statuts Gradio récents et anciens doivent être acceptés.");
 assert.match(app, /stage === "complete"/, "Le statut Gradio complete doit être reconnu.");
 assert.match(app, /stage === "pending"/, "Le statut Gradio pending doit être reconnu.");
 assert.match(app, /stage === "generating"/, "Le statut Gradio generating doit être reconnu.");
