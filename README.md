@@ -8,17 +8,19 @@ VIDEO AI STUDIO est une application web statique pensée pour les téléphones A
 
 - Génération texte vers vidéo.
 - Animation d'une image avec un prompt.
-- Choix de durée souhaitée.
+- Choix de durée souhaitée selon les limites du moteur.
 - Aperçu vidéo et lien de téléchargement lorsque le moteur retourne un fichier.
 - Interface responsive en français.
 - Hébergement du site avec GitHub Pages.
 
 ## Moteurs IA externes
 
-- **Texte vers vidéo :** [Wan 2.2 Text-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti)
-- **Image vers vidéo :** [Wan 2.2 Image-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster)
+- **Texte vers vidéo :** [Wan2.2 Remix SFW — Text to Video](https://huggingface.co/spaces/mastaP/wan22-remix-sfw-t2v). Le Space annonce des clips de 1 à 5 secondes, en 832 × 480 à 16 images/seconde. L'application utilise 8 étapes et une guidance de 1.0, conformément aux réglages par défaut annoncés par le Space.
+- **Image vers vidéo :** [Wan 2.2 Image-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster).
 
-Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente, leurs quotas et leurs conditions peuvent changer sans préavis. Le fonctionnement gratuit et illimité n'est pas garanti. Si un moteur est indisponible, l'application affiche un message et un lien vers le Space concerné.
+Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente, leurs quotas et leurs conditions peuvent changer sans préavis. Le fonctionnement gratuit et illimité n'est pas garanti. Si Hugging Face renvoie une erreur explicite de quota quotidien ZeroGPU épuisé, l'application mémorise localement ce signal et bloque les nouveaux essais pendant 24 heures à partir de la détection afin d'éviter les requêtes répétées. Ce délai est une précaution locale, pas une information officielle sur l'heure exacte de réinitialisation du compte.
+
+**Attention aux droits :** le Space texte-vers-vidéo indique que la licence de sa version Remix et les droits de ses poids/sorties ne sont pas établis pour un usage commercial. Réservez les essais à un usage non commercial tant que ces droits ne sont pas clarifiés. Respectez également les règles du Space concernant les personnes réelles identifiables et l'étiquetage des contenus générés par IA.
 
 ## Utilisation
 
@@ -26,9 +28,11 @@ Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente,
 2. Choisir **Texte vers vidéo** ou **Image vers vidéo**.
 3. Rédiger un prompt décrivant le sujet, le mouvement et l'ambiance.
 4. En mode image, sélectionner une image PNG, JPG ou WebP de 10 Mo maximum.
-5. Choisir la durée souhaitée et lancer la génération.
+5. Choisir une durée disponible et lancer la génération.
 6. Patienter pendant la connexion et le traitement par le service externe.
 7. Lire ou télécharger la vidéo si une génération aboutit.
+
+Dans les deux modes, les choix supérieurs à 5 secondes sont désactivés : le moteur texte-vers-vidéo limite les clips à 5 secondes et le moteur image-vers-vidéo les borne également à 5 secondes.
 
 ## Déploiement GitHub Pages
 
@@ -67,11 +71,11 @@ VIDEO-AI-STUDIO/
 
 ## État du projet
 
-- **Version :** 0.4
-- **Statut :** bêta expérimentale
-- **Publication automatique sur les réseaux :** aucune
-- **Génération vidéo :** dépend des espaces Hugging Face externes.
+- **Version :** 0.4 — correctif moteur en test sur une branche séparée.
+- **Statut :** bêta expérimentale.
+- **Publication automatique sur les réseaux :** aucune.
+- **Génération vidéo :** dépend des espaces Hugging Face externes et n'est pas encore garantie.
 
 ## Licence
 
-Le code de ce dépôt est distribué sous licence MIT. Cette licence ne remplace pas les licences et conditions propres aux modèles Wan, aux espaces Hugging Face ou aux services tiers utilisés.
+Le code de ce dépôt est distribué sous licence MIT. Cette licence ne remplace pas les licences et conditions propres aux modèles Wan, aux poids de fine-tuning, aux espaces Hugging Face ou aux services tiers utilisés.

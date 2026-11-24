@@ -1,10 +1,10 @@
-import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client@2.7.0/dist/index.min.js";
 
 (() => {
   "use strict";
 
   const SPACE_I2V = "zerogpu-aoti/wan2-2-fp8da-aoti-faster";
-  const SPACE_T2V = "zerogpu-aoti/wan2-2-fp8da-aoti";
+  const SPACE_T2V = "mastaP/wan22-remix-sfw-t2v";
   const $ = (id) => document.getElementById(id);
 
   const textMode = $("textMode"), imageMode = $("imageMode");
@@ -12,15 +12,109 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   const counter = $("counter"), imageInput = $("imageInput");
   const imagePreview = $("imagePreview"), uploadMessage = $("uploadMessage");
   const removeImage = $("removeImage"), duration = $("duration");
+  const durationHelp = duration.closest(".field").querySelector(".field-help");
+  const defaultDurationHelp = durationHelp.textContent;
   const generateButton = $("generateButton"), notice = $("notice");
   const resultSection = $("resultSection"), resultVideo = $("resultVideo");
   const downloadLink = $("downloadLink");
+  const progressPanel = $("progressPanel"), progressBar = $("progressBar");
+  const progressTitle = $("progressTitle"), progressDetail = $("progressDetail");
+  const progressState = $("progressState");
+  const progressSteps = Array.from(document.querySelectorAll("[data-progress-step]"));
 
   let mode = "text", selectedImage = null, imageObjectUrl = null, generating = false;
+
+  const QUOTA_STORAGE_KEY = "videoAiStudio.zeroGpuQuotaDetectedAt";
+  const QUOTA_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+  function getQuotaCooldownRemaining() {
+    try {
+      const detectedAt = Number(localStorage.getItem(QUOTA_STORAGE_KEY));
+      if (!Number.isFinite(detectedAt) || detectedAt <= 0) return 0;
+      const remaining = QUOTA_COOLDOWN_MS - (Date.now() - detectedAt);
+      if (remaining <= 0) {
+        localStorage.removeItem(QUOTA_STORAGE_KEY);
+        return 0;
+      }
+      return remaining;
+    } catch {
+      return 0;
+    }
+  }
+
+  function isZeroGpuQuotaError(error) {
+    const message = typeof error === "string"
+      ? error
+      : [error && error.message, error && error.details, error && error.cause]
+          .filter(Boolean).join(" ");
+    return /you(?:'ve| have) hit your daily zerogpu limit|zerogpu.{0,100}(?:quota|limit)|(?:quota|limit).{0,100}zerogpu|daily.{0,80}(?:gpu|quota|limit)|you have exceeded your.*(?:runs )?limit/i.test(message);
+  }
+
+  function rememberZeroGpuQuota() {
+    try {
+      localStorage.setItem(QUOTA_STORAGE_KEY, String(Date.now()));
+    } catch {
+      // The current request still receives the quota-specific message if storage is unavailable.
+    }
+  }
+
+  function formatCooldown(remaining) {
+    const hours = Math.max(1, Math.ceil(remaining / (60 * 60 * 1000)));
+    return hours + " h environ";
+  }
+
+  function setFormLocked(locked) {
+    textMode.disabled = locked;
+    imageMode.disabled = locked;
+    prompt.disabled = locked;
+    imageInput.disabled = locked;
+    removeImage.disabled = locked;
+    duration.disabled = locked;
+  }
+
+  const progressLabels = {
+    connecting: ["Connexion au moteur IA", "Contact du service Hugging Face..."],
+    queued: ["En attente dans la file", "Le service prépare votre tour. Le délai dépend de la disponibilité."],
+    generating: ["Création de votre vidéo", "Le modèle IA travaille. Cette étape peut prendre plusieurs minutes."],
+    receiving: ["Récupération du résultat", "La vidéo est prête côté moteur, chargement du fichier..."],
+    done: ["Génération terminée", "Votre vidéo est disponible ci-dessous."],
+    error: ["Génération interrompue", "Consultez le message d'erreur ci-dessous."]
+  };
+  const progressOrder = ["connecting", "queued", "generating", "receiving", "done"];
+
+  function setProgress(stage, detail) {
+    const index = progressOrder.indexOf(stage);
+    const labels = progressLabels[stage] || progressLabels.connecting;
+    progressPanel.classList.remove("hidden", "is-error", "is-done");
+    progressPanel.classList.toggle("is-error", stage === "error");
+    progressPanel.classList.toggle("is-done", stage === "done");
+    progressTitle.textContent = labels[0];
+    progressDetail.textContent = detail || labels[1];
+    progressState.textContent = stage === "done" ? "TERMINÉ" : stage === "error" ? "ARRÊTÉ" : "EN COURS";
+    progressBar.classList.toggle("is-indeterminate", stage !== "done" && stage !== "error");
+    progressBar.style.width = stage === "done" ? "100%" : stage === "error" ? "0%" : "38%";
+    progressSteps.forEach((step) => {
+      const stepIndex = progressOrder.indexOf(step.dataset.progressStep);
+      step.classList.toggle("is-current", stepIndex === index);
+      step.classList.toggle("is-complete", index >= 0 && stepIndex < index);
+    });
+  }
 
   function showMessage(text, type = "info") {
     notice.textContent = text;
     notice.className = "notice " + type;
+  }
+
+  function updateDurationOptions() {
+    Array.from(duration.options).forEach((option) => {
+      option.disabled = Number(option.value) > 5;
+    });
+    if (duration.selectedOptions[0] && duration.selectedOptions[0].disabled) {
+      duration.value = "5";
+    }
+    durationHelp.textContent = mode === "text"
+      ? "Le moteur texte vers vidéo accepte des clips de 1 à 5 secondes."
+      : "Le moteur image vers vidéo limite également les clips à 5 secondes maximum.";
   }
 
   function setMode(nextMode) {
@@ -30,9 +124,11 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     textMode.setAttribute("aria-pressed", String(mode === "text"));
     imageMode.setAttribute("aria-pressed", String(mode === "image"));
     imageSection.classList.toggle("hidden", mode !== "image");
+    updateDurationOptions();
     showMessage(mode === "text" ? "Mode texte vers vidéo sélectionné." : "Mode image vers vidéo sélectionné.");
   }
 
+  updateDurationOptions();
   textMode.addEventListener("click", () => setMode("text"));
   imageMode.addEventListener("click", () => setMode("image"));
   prompt.addEventListener("input", () => { counter.textContent = prompt.value.length + "/1500"; });
@@ -81,13 +177,31 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     let result = null;
     for await (const event of submission) {
       if (event.type === "status") {
-        const stage = event.stage || (event.status && event.status.stage);
-        if (stage === "pending") showMessage("Demande en attente dans la file du service IA...");
-        else if (stage === "generating") showMessage("Le modèle IA génère votre vidéo. Cela peut prendre plusieurs minutes...");
-        else if (stage === "error") throw new Error(event.message || "Le service IA a signalé une erreur.");
-        else showMessage("Traitement par le service IA...");
+        const status = event.status;
+        const stage = event.stage || (status && typeof status === "object" ? (status.stage || status.status) : status);
+        if (stage === "pending") {
+          const position = event.position ?? (status && status.position);
+          const queueInfo = Number.isFinite(position) ? " Position dans la file : " + (position + 1) + "." : "";
+          setProgress("queued", "Le service prépare votre tour." + queueInfo);
+          showMessage("Demande reçue : attente de votre tour dans la file IA...");
+        } else if (stage === "generating") {
+          setProgress("generating");
+          showMessage("Le modèle IA génère votre vidéo. Cela peut prendre plusieurs minutes...");
+        } else if (stage === "complete") {
+          setProgress("receiving");
+          showMessage("Le moteur a terminé le calcul. Récupération du fichier vidéo...");
+        } else if (stage === "error") {
+          const message = event.message || (status && status.message) || "Le service IA a signalé une erreur.";
+          throw new Error(message);
+        } else {
+          setProgress("generating", "Le service traite votre demande...");
+          showMessage("Traitement par le service IA...");
+        }
       } else if (event.type === "data" || event.type === "complete") {
-        result = event.data;
+        setProgress("receiving");
+        // This endpoint returns one final result; stop consuming immediately to avoid
+        // waiting for an extra iterator event after Gradio has already sent the data.
+        return event.data;
       } else if (event.type === "error") {
         throw new Error(event.message || "Le service IA a rencontré une erreur.");
       }
@@ -97,27 +211,40 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   }
 
   async function generate() {
+    if (generating) return;
+    const quotaRemaining = getQuotaCooldownRemaining();
+    if (quotaRemaining > 0) {
+      setProgress("error", "La limite quotidienne ZeroGPU a été atteinte. Le délai de sécurité local expire dans " + formatCooldown(quotaRemaining) + ".");
+      showMessage("Quota gratuit ZeroGPU épuisé. Pour éviter des appels inutiles, VIDEO AI STUDIO bloque les nouveaux essais pendant " + formatCooldown(quotaRemaining) + ". Aucun abonnement PRO n'est nécessaire.", "error");
+      return;
+    }
+    const requestMode = mode;
+    const requestImage = selectedImage;
+    const seconds = Number(duration.value);
     const text = prompt.value.trim();
     if (!text) { showMessage("Veuillez écrire une description de votre vidéo.", "error"); prompt.focus(); return; }
-    if (mode === "image" && !selectedImage) { showMessage("Ajoutez une image avant de continuer.", "error"); return; }
+    if (requestMode === "image" && !requestImage) { showMessage("Ajoutez une image avant de continuer.", "error"); return; }
 
     generating = true;
+    setFormLocked(true);
     generateButton.disabled = true;
     generateButton.textContent = "Connexion au moteur IA...";
     resultSection.classList.add("hidden");
     resultVideo.removeAttribute("src");
-    const seconds = Number(duration.value);
+    setProgress("connecting");
 
     try {
       showMessage("Connexion à Hugging Face. Le service gratuit peut être momentanément indisponible...");
+      setProgress("connecting");
       let client, inputs;
-      if (mode === "image") {
+      if (requestMode === "image") {
         client = await Client.connect(SPACE_I2V, { events: ["status", "data"] });
-        const image = await handle_file(selectedImage);
+        const image = await handle_file(requestImage);
         inputs = [image, text, 6, "", seconds, 1, 1, 42, true];
       } else {
         client = await Client.connect(SPACE_T2V, { events: ["status", "data"] });
-        inputs = [text, "", seconds, 1, 3, 4, 42, true];
+        // API mastaP/wan22-remix-sfw-t2v: prompt, negative prompt, seconds, steps, guidance, seed, randomize.
+        inputs = [text, "", seconds, 8, 1, 42, true];
       }
       const data = await collectSubmission(client, inputs);
       const videoUrl = extractVideoUrl(data);
@@ -125,20 +252,29 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
       downloadLink.href = videoUrl;
       resultSection.classList.remove("hidden");
       resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      setProgress("done");
       showMessage("Le service a retourné une vidéo. Vous pouvez la visionner ou la télécharger.", "success");
     } catch (error) {
       console.error("VIDEO AI STUDIO:", error);
-      const detail = error && error.message ? error.message : "Erreur inconnue.";
-      showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
-      const space = mode === "image" ? SPACE_I2V : SPACE_T2V;
-      const link = document.createElement("a");
-      link.href = "https://huggingface.co/spaces/" + space;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = " Ouvrir le moteur sur Hugging Face";
-      notice.appendChild(link);
+      const detail = error && error.message ? error.message : String(error || "Erreur inconnue.");
+      if (isZeroGpuQuotaError(error)) {
+        rememberZeroGpuQuota();
+        setProgress("error", "Le quota quotidien gratuit ZeroGPU de Hugging Face est épuisé.");
+        showMessage("Quota quotidien ZeroGPU épuisé. Les moteurs gratuits Hugging Face ne peuvent plus lancer de génération avec ce quota. VIDEO AI STUDIO suspend les nouveaux essais pendant 24 h à partir de ce message pour éviter les appels inutiles. Vous n'avez pas besoin de souscrire à PRO.", "error");
+      } else {
+        setProgress("error", detail);
+        showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
+        const space = requestMode === "image" ? SPACE_I2V : SPACE_T2V;
+        const link = document.createElement("a");
+        link.href = "https://huggingface.co/spaces/" + space;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = " Ouvrir le moteur sur Hugging Face";
+        notice.appendChild(link);
+      }
     } finally {
       generating = false;
+      setFormLocked(false);
       generateButton.disabled = false;
       generateButton.innerHTML = "<span>✦</span> Générer ma vidéo";
     }
