@@ -31,6 +31,7 @@ assert.match(app, /progressState\.textContent = stage === "done"/, "Le libellé 
 assert.match(app, /option\.disabled = Number\(option\.value\) > 5/, "Les durées supérieures à 5 s doivent être désactivées.");
 assert.match(html, /<option value="4">4 secondes<\/option>/, "Une durée courte doit être proposée.");
 assert.match(html, /<option value="5">5 secondes<\/option>/, "La durée maximale de 5 s doit être proposée.");
+assert.match(app, /@gradio\/client@2\.7\.0/, "La version du client Gradio doit être verrouillée.");
 assert.match(app, /mastaP\/wan22-remix-sfw-t2v/, "Le moteur T2V de test doit être configuré.");
 assert.match(app, /zerogpu-aoti\/wan2-2-fp8da-aoti-faster/, "Le moteur I2V d'origine doit être conservé.");
 assert.match(app, /inputs = \[text, "", seconds, 8, 1, 42, true\]/, "Les 7 entrées T2V doivent suivre l'API du Space Remix.");
