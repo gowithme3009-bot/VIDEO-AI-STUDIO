@@ -32,7 +32,7 @@ Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente,
 6. Patienter pendant la connexion et le traitement par le service externe.
 7. Lire ou télécharger la vidéo si une génération aboutit.
 
-En mode **Texte vers vidéo**, les choix supérieurs à 5 secondes sont désactivés, car le Space sélectionné limite les clips à 5 secondes. Les options de durée du mode image restent distinctes.
+Dans les deux modes, les choix supérieurs à 5 secondes sont désactivés : le moteur texte-vers-vidéo limite les clips à 5 secondes et le moteur image-vers-vidéo les borne également à 5 secondes.
 
 ## Déploiement GitHub Pages
 
