@@ -1,55 +1,48 @@
-
 # 🎬 VIDEO AI STUDIO
 
-**Atelier gratuit de création vidéo IA — Texte vers vidéo et Image vers vidéo.**
+**Atelier expérimental de création vidéo IA — texte vers vidéo et image vers vidéo.**
 
-VIDEO AI STUDIO est une application web conçue pour fonctionner sur ordinateur et Android. Elle permet de préparer des prompts et de générer des vidéos à l'aide de modèles IA accessibles via Hugging Face Spaces.
+VIDEO AI STUDIO est une application web statique pensée pour les téléphones Android et les ordinateurs. Elle utilise des espaces publics Hugging Face pour tenter de générer des vidéos à partir d'une description ou d'une image.
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
-- ✍️ Génération vidéo à partir d'un texte.
-- 🖼️ Animation d'une image avec un prompt.
-- ⏱️ Choix de la durée de la vidéo.
-- 👀 Aperçu du résultat.
-- 📥 Téléchargement de la vidéo lorsqu'elle est disponible.
-- 📱 Interface adaptée aux téléphones Android.
-- 🌐 Hébergement possible avec GitHub Pages.
+- Génération texte vers vidéo.
+- Animation d'une image avec un prompt.
+- Choix de durée souhaitée.
+- Aperçu vidéo et lien de téléchargement lorsque le moteur retourne un fichier.
+- Interface responsive en français.
+- Hébergement du site avec GitHub Pages.
 
-## 🧠 Moteurs IA
-
-Le projet utilise des espaces publics Hugging Face basés sur Wan 2.2 :
+## Moteurs IA externes
 
 - **Texte vers vidéo :** [Wan 2.2 Text-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti)
 - **Image vers vidéo :** [Wan 2.2 Image-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster)
 
-La disponibilité dépend des serveurs, des files d'attente et des limites d'utilisation de ces services externes.
+Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente, leurs quotas et leurs conditions peuvent changer sans préavis. Le fonctionnement gratuit et illimité n'est pas garanti. Si un moteur est indisponible, l'application affiche un message et un lien vers le Space concerné.
 
-## 🚀 Installation et utilisation
+## Utilisation
 
-1. Ouvrir VIDEO AI STUDIO depuis son site GitHub Pages.
-2. Choisir Texte vers vidéo ou Image vers vidéo.
-3. Écrire une description précise de la scène.
-4. Ajouter une image si le mode Image vers vidéo est sélectionné.
-5. Choisir la durée.
-6. Lancer la génération.
-7. Attendre le résultat, puis télécharger la vidéo si elle est disponible.
+1. Ouvrir le site publié avec GitHub Pages.
+2. Choisir **Texte vers vidéo** ou **Image vers vidéo**.
+3. Rédiger un prompt décrivant le sujet, le mouvement et l'ambiance.
+4. En mode image, sélectionner une image PNG, JPG ou WebP de 10 Mo maximum.
+5. Choisir la durée souhaitée et lancer la génération.
+6. Patienter pendant la connexion et le traitement par le service externe.
+7. Lire ou télécharger la vidéo si une génération aboutit.
 
-## 🌍 Hébergement GitHub Pages
+## Déploiement GitHub Pages
 
-Le projet peut être hébergé gratuitement avec GitHub Pages.
+Le workflow `.github/workflows/pages.yml` déploie le contenu de la branche `main`.
 
-Dans le dépôt :
+Dans les paramètres du dépôt :
 
-1. Ouvrir **Settings**.
-2. Sélectionner **Pages**.
-3. Choisir **GitHub Actions** comme source.
-4. Attendre la fin du déploiement.
+1. Ouvrir **Settings → Pages**.
+2. Dans **Build and deployment**, choisir **GitHub Actions** comme source.
+3. Fusionner la version validée dans `main` pour déclencher le déploiement, ou lancer le workflow manuellement depuis **Actions**.
 
-Adresse prévue du site :
+URL prévue : https://gowithme3009-bot.github.io/VIDEO-AI-STUDIO/
 
-https://gowithme3009-bot.github.io/VIDEO-AI-STUDIO/
-
-## 📁 Structure du projet
+## Structure
 
 ```text
 VIDEO-AI-STUDIO/
@@ -64,25 +57,21 @@ VIDEO-AI-STUDIO/
         └── pages.yml
 ```
 
-## 💰 Coût et limites
+## Coût, confidentialité et limites
 
-- Le code du projet peut être hébergé gratuitement sur GitHub.
-- GitHub Pages propose un hébergement statique gratuit dans les limites de son offre.
-- Les générations vidéo utilisent des services externes qui peuvent appliquer des quotas, des temps d'attente ou des restrictions.
-- La génération illimitée et gratuite n'est pas garantie.
-- Aucun paiement ni clé API personnelle ne doit être nécessaire pour le fonctionnement prévu de cette version.
+- Le dépôt public et GitHub Pages peuvent être utilisés sans frais dans les limites de GitHub.
+- La génération vidéo est effectuée par des services externes et n'est pas garantie gratuite, illimitée ou toujours disponible.
+- Les prompts et images sélectionnés sont transmis au Space Hugging Face choisi.
+- Ne soumettez aucune donnée personnelle, confidentielle ou sensible.
+- N'ajoutez jamais de mot de passe, clé API ou jeton personnel dans les fichiers publics.
 
-## 🔐 Sécurité
+## État du projet
 
-Ne jamais placer de mot de passe, clé API ou jeton personnel dans les fichiers publics du dépôt.
+- **Version :** 0.4
+- **Statut :** bêta expérimentale
+- **Publication automatique sur les réseaux :** aucune
+- **Génération vidéo :** dépend des espaces Hugging Face externes.
 
-## 📌 État du projet
+## Licence
 
-**Version :** 0.3  
-**Statut :** Bêta expérimentale  
-**Publication automatique :** Non  
-**Génération vidéo :** Dépend des espaces Hugging Face disponibles.
-
----
-
-Créé pour expérimenter la génération vidéo IA avec des outils accessibles et des technologies open source.
+Le code de ce dépôt est distribué sous licence MIT. Cette licence ne remplace pas les licences et conditions propres aux modèles Wan, aux espaces Hugging Face ou aux services tiers utilisés.
