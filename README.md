@@ -18,7 +18,7 @@ VIDEO AI STUDIO est une application web statique pensée pour les téléphones A
 - **Texte vers vidéo :** [Wan2.2 Remix SFW — Text to Video](https://huggingface.co/spaces/mastaP/wan22-remix-sfw-t2v). Le Space annonce des clips de 1 à 5 secondes, en 832 × 480 à 16 images/seconde. L'application utilise 8 étapes et une guidance de 1.0, conformément aux réglages par défaut annoncés par le Space.
 - **Image vers vidéo :** [Wan 2.2 Image-to-Video](https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster).
 
-Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente, leurs quotas et leurs conditions peuvent changer sans préavis. Le fonctionnement gratuit et illimité n'est pas garanti.
+Ces espaces sont des services tiers. Leur disponibilité, leurs files d'attente, leurs quotas et leurs conditions peuvent changer sans préavis. Le fonctionnement gratuit et illimité n'est pas garanti. Si Hugging Face renvoie une erreur explicite de quota quotidien ZeroGPU épuisé, l'application mémorise localement ce signal et bloque les nouveaux essais pendant 24 heures à partir de la détection afin d'éviter les requêtes répétées. Ce délai est une précaution locale, pas une information officielle sur l'heure exacte de réinitialisation du compte.
 
 **Attention aux droits :** le Space texte-vers-vidéo indique que la licence de sa version Remix et les droits de ses poids/sorties ne sont pas établis pour un usage commercial. Réservez les essais à un usage non commercial tant que ces droits ne sont pas clarifiés. Respectez également les règles du Space concernant les personnes réelles identifiables et l'étiquetage des contenus générés par IA.
 
