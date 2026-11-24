@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/complete-video-ai-studio
   workflow_dispatch:
 
 permissions:
