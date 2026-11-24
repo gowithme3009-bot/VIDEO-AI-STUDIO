@@ -1,4 +1,3 @@
-
 import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
 (() => {
@@ -6,289 +5,146 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
 
   const SPACE_I2V = "zerogpu-aoti/wan2-2-fp8da-aoti-faster";
   const SPACE_T2V = "zerogpu-aoti/wan2-2-fp8da-aoti";
+  const $ = (id) => document.getElementById(id);
 
-  const textMode = document.getElementById("textMode");
-  const imageMode = document.getElementById("imageMode");
-  const imageSection = document.getElementById("imageSection");
-  const prompt = document.getElementById("prompt");
-  const counter = document.getElementById("counter");
-  const imageInput = document.getElementById("imageInput");
-  const imagePreview = document.getElementById("imagePreview");
-  const uploadMessage = document.getElementById("uploadMessage");
-  const removeImage = document.getElementById("removeImage");
-  const duration = document.getElementById("duration");
-  const generateButton = document.getElementById("generateButton");
-  const notice = document.getElementById("notice");
-  const resultSection = document.getElementById("resultSection");
-  const resultVideo = document.getElementById("resultVideo");
-  const downloadLink = document.getElementById("downloadLink");
+  const textMode = $("textMode"), imageMode = $("imageMode");
+  const imageSection = $("imageSection"), prompt = $("prompt");
+  const counter = $("counter"), imageInput = $("imageInput");
+  const imagePreview = $("imagePreview"), uploadMessage = $("uploadMessage");
+  const removeImage = $("removeImage"), duration = $("duration");
+  const generateButton = $("generateButton"), notice = $("notice");
+  const resultSection = $("resultSection"), resultVideo = $("resultVideo");
+  const downloadLink = $("downloadLink");
 
-  let currentMode = "text";
-  let selectedImage = null;
-  let imageObjectUrl = null;
-  let isGenerating = false;
+  let mode = "text", selectedImage = null, imageObjectUrl = null, generating = false;
 
-  function message(text, type = "info") {
+  function showMessage(text, type = "info") {
     notice.textContent = text;
-    notice.className = `notice ${type}`;
+    notice.className = "notice " + type;
   }
 
-  function setMode(mode) {
-    currentMode = mode;
-
+  function setMode(nextMode) {
+    mode = nextMode;
     textMode.classList.toggle("active", mode === "text");
     imageMode.classList.toggle("active", mode === "image");
-
+    textMode.setAttribute("aria-pressed", String(mode === "text"));
+    imageMode.setAttribute("aria-pressed", String(mode === "image"));
     imageSection.classList.toggle("hidden", mode !== "image");
-
-    message(
-      mode === "text"
-        ? "Mode texte vers vidéo sélectionné."
-        : "Mode image vers vidéo sélectionné."
-    );
+    showMessage(mode === "text" ? "Mode texte vers vidéo sélectionné." : "Mode image vers vidéo sélectionné.");
   }
 
   textMode.addEventListener("click", () => setMode("text"));
   imageMode.addEventListener("click", () => setMode("image"));
+  prompt.addEventListener("input", () => { counter.textContent = prompt.value.length + "/1500"; });
 
-  prompt.addEventListener("input", () => {
-    counter.textContent = `${prompt.value.length}/1500`;
-  });
-
-  imageInput.addEventListener("change", () => {
-    const file = imageInput.files?.[0];
-
-    if (!file) return;
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      message("Format non accepté. Utilisez PNG, JPG ou WebP.", "error");
-      imageInput.value = "";
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      message("Image trop volumineuse. Maximum : 10 Mo.", "error");
-      imageInput.value = "";
-      return;
-    }
-
-    selectedImage = file;
-
-    if (imageObjectUrl) {
-      URL.revokeObjectURL(imageObjectUrl);
-    }
-
-    imageObjectUrl = URL.createObjectURL(file);
-    imagePreview.src = imageObjectUrl;
-
-    imagePreview.classList.remove("hidden");
-    uploadMessage.classList.add("hidden");
-    removeImage.classList.remove("hidden");
-
-    message("Image ajoutée avec succès.");
-  });
-
-  removeImage.addEventListener("click", () => {
+  function clearImage() {
     selectedImage = null;
     imageInput.value = "";
-
-    if (imageObjectUrl) {
-      URL.revokeObjectURL(imageObjectUrl);
-      imageObjectUrl = null;
-    }
-
+    if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl);
+    imageObjectUrl = null;
     imagePreview.removeAttribute("src");
     imagePreview.classList.add("hidden");
     uploadMessage.classList.remove("hidden");
     removeImage.classList.add("hidden");
+  }
 
-    message("Image supprimée.");
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files && imageInput.files[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      clearImage(); showMessage("Format non accepté. Utilisez PNG, JPG ou WebP.", "error"); return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      clearImage(); showMessage("Image trop volumineuse. Maximum : 10 Mo.", "error"); return;
+    }
+    if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl);
+    selectedImage = file;
+    imageObjectUrl = URL.createObjectURL(file);
+    imagePreview.src = imageObjectUrl;
+    imagePreview.classList.remove("hidden");
+    uploadMessage.classList.add("hidden");
+    removeImage.classList.remove("hidden");
+    showMessage("Image ajoutée. Vous pouvez lancer la génération.");
   });
+  removeImage.addEventListener("click", () => { clearImage(); showMessage("Image supprimée."); });
 
   function extractVideoUrl(data) {
-    if (!Array.isArray(data) || !data.length) {
-      throw new Error("Le moteur n'a retourné aucun résultat.");
-    }
-
-    const video = data[0];
-
-    if (typeof video === "string") {
-      return video;
-    }
-
-    if (video?.url) {
-      return video.url;
-    }
-
-    if (video?.video?.url) {
-      return video.video.url;
-    }
-
-    if (video?.path) {
-      return video.path;
-    }
-
-    throw new Error("Format vidéo retourné non reconnu.");
+    const item = Array.isArray(data) ? data[0] : data;
+    if (typeof item === "string") return item;
+    const url = item && (item.url || (item.video && item.video.url) || item.path || (item.video && item.video.path));
+    if (typeof url === "string" && url) return url;
+    throw new Error("Le moteur n'a pas retourné de fichier vidéo reconnu.");
   }
 
-  async function generateTextVideo(text, seconds) {
-    const client = await Client.connect(SPACE_T2V);
-
-    const inputs = [
-      text,
-      "",
-      seconds,
-      1,
-      3,
-      4,
-      42,
-      true
-    ];
-
-    return await submitAndCollect(client, inputs);
-  }
-
-  async function generateImageVideo(file, text, seconds) {
-    const client = await Client.connect(SPACE_I2V);
-
-    const image = await handle_file(file);
-
-    const inputs = [
-      image,
-      text,
-      6,
-      "",
-      seconds,
-      1,
-      1,
-      42,
-      true
-    ];
-
-    return await submitAndCollect(client, inputs);
-  }
-
-  async function submitAndCollect(client, inputs) {
+  async function collectSubmission(client, inputs) {
     const submission = client.submit("/generate_video", inputs);
-
-    let finalData = null;
-
+    let result = null;
     for await (const event of submission) {
       if (event.type === "status") {
-        const status = event.stage;
-
-        if (status === "pending") {
-          message("Votre demande est dans la file d'attente...");
-        } else if (status === "generating") {
-          message("Le modèle IA génère votre vidéo. Patientez...");
-        } else {
-          message("Traitement de votre demande...");
-        }
-      }
-
-      if (event.type === "complete") {
-        finalData = event.data;
-      }
-
-      if (event.type === "error") {
-        throw new Error(
-          event.message || "Le moteur vidéo a rencontré une erreur."
-        );
+        const stage = event.stage || (event.status && event.status.stage);
+        if (stage === "pending") showMessage("Demande en attente dans la file du service IA...");
+        else if (stage === "generating") showMessage("Le modèle IA génère votre vidéo. Cela peut prendre plusieurs minutes...");
+        else if (stage === "error") throw new Error(event.message || "Le service IA a signalé une erreur.");
+        else showMessage("Traitement par le service IA...");
+      } else if (event.type === "data" || event.type === "complete") {
+        result = event.data;
+      } else if (event.type === "error") {
+        throw new Error(event.message || "Le service IA a rencontré une erreur.");
       }
     }
-
-    if (!finalData) {
-      throw new Error("La génération n'a pas retourné de vidéo.");
-    }
-
-    return finalData;
+    if (!result) throw new Error("Aucun résultat reçu du service IA.");
+    return result;
   }
 
-  function displayVideo(url) {
-    resultVideo.src = url;
-    downloadLink.href = url;
-
-    resultSection.classList.remove("hidden");
-
-    resultSection.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-    message("Vidéo générée ! Vous pouvez la visionner.", "success");
-  }
-
-  generateButton.addEventListener("click", async () => {
-    if (isGenerating) return;
-
+  async function generate() {
     const text = prompt.value.trim();
+    if (!text) { showMessage("Veuillez écrire une description de votre vidéo.", "error"); prompt.focus(); return; }
+    if (mode === "image" && !selectedImage) { showMessage("Ajoutez une image avant de continuer.", "error"); return; }
 
-    if (!text) {
-      message("Veuillez écrire une description de votre vidéo.", "error");
-      prompt.focus();
-      return;
-    }
-
-    if (currentMode === "image" && !selectedImage) {
-      message("Ajoutez une image avant de continuer.", "error");
-      return;
-    }
-
-    isGenerating = true;
+    generating = true;
     generateButton.disabled = true;
-    generateButton.textContent = "Génération en cours...";
+    generateButton.textContent = "Connexion au moteur IA...";
     resultSection.classList.add("hidden");
-
+    resultVideo.removeAttribute("src");
     const seconds = Number(duration.value);
 
     try {
-      message("Connexion au moteur vidéo Hugging Face...");
-
-      let data;
-
-      if (currentMode === "image") {
-        data = await generateImageVideo(
-          selectedImage,
-          text,
-          seconds
-        );
+      showMessage("Connexion à Hugging Face. Le service gratuit peut être momentanément indisponible...");
+      let client, inputs;
+      if (mode === "image") {
+        client = await Client.connect(SPACE_I2V);
+        const image = await handle_file(selectedImage);
+        inputs = [image, text, 6, "", seconds, 1, 1, 42, true];
       } else {
-        data = await generateTextVideo(text, seconds);
+        client = await Client.connect(SPACE_T2V);
+        inputs = [text, "", seconds, 1, 3, 4, 42, true];
       }
-
+      const data = await collectSubmission(client, inputs);
       const videoUrl = extractVideoUrl(data);
-      displayVideo(videoUrl);
-
+      resultVideo.src = videoUrl;
+      downloadLink.href = videoUrl;
+      resultSection.classList.remove("hidden");
+      resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      showMessage("Le service a retourné une vidéo. Vous pouvez la visionner ou la télécharger.", "success");
     } catch (error) {
       console.error("VIDEO AI STUDIO:", error);
-
-      const detail = error?.message || "Erreur inconnue.";
-
-      message(
-        "La génération a échoué : " + detail +
-        " Vous pouvez réessayer ou vérifier la disponibilité du moteur.",
-        "error"
-      );
-
+      const detail = error && error.message ? error.message : "Erreur inconnue.";
+      showMessage("Génération impossible : " + detail + " Réessayez plus tard ou ouvrez directement le Space Hugging Face.", "error");
+      const space = mode === "image" ? SPACE_I2V : SPACE_T2V;
+      const link = document.createElement("a");
+      link.href = "https://huggingface.co/spaces/" + space;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = " Ouvrir le moteur sur Hugging Face";
+      notice.appendChild(link);
     } finally {
-      isGenerating = false;
+      generating = false;
       generateButton.disabled = false;
       generateButton.innerHTML = "<span>✦</span> Générer ma vidéo";
     }
-  });
+  }
 
-  window.addEventListener("beforeunload", () => {
-    if (imageObjectUrl) {
-      URL.revokeObjectURL(imageObjectUrl);
-    }
-  });
-
-  console.log("VIDEO AI STUDIO V0.3 initialisé.");
+  generateButton.addEventListener("click", generate);
+  window.addEventListener("beforeunload", () => { if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl); });
+  console.log("VIDEO AI STUDIO V0.4 prêt.");
 })();
-  
