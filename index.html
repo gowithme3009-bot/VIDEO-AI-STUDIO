@@ -1,23 +1,18 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101522">
-  <meta name="description" content="VIDEO AI STUDIO - Création vidéo avec l'intelligence artificielle.">
+  <meta name="description" content="VIDEO AI STUDIO — atelier expérimental de création vidéo par intelligence artificielle.">
   <title>VIDEO AI STUDIO</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="./styles.css">
 </head>
-
 <body>
   <header class="topbar">
-    <a class="brand" href="./">
-      <span class="brand-mark">▶</span>
-      <span>
-        <strong>VIDEO AI STUDIO</strong>
-        <small>ATELIER DE CRÉATION · V0.3</small>
-      </span>
+    <a class="brand" href="./" aria-label="Accueil VIDEO AI STUDIO">
+      <span class="brand-mark" aria-hidden="true">▶</span>
+      <span><strong>VIDEO AI STUDIO</strong><small>ATELIER DE CRÉATION · V0.4</small></span>
     </a>
     <span class="version">BÊTA</span>
   </header>
@@ -26,141 +21,70 @@
     <section class="hero">
       <p class="eyebrow">✦ CRÉATION VIDÉO IA</p>
       <h1>Donnez vie à<br><span>vos idées.</span></h1>
-      <p class="subtitle">
-        Transformez vos textes et vos images en vidéos
-        grâce à des modèles d'intelligence artificielle.
-      </p>
+      <p class="subtitle">Préparez vos créations vidéo avec l'IA, depuis votre téléphone ou votre ordinateur.</p>
     </section>
 
-    <section class="studio">
+    <section class="studio" aria-labelledby="studioTitle">
       <div class="section-heading">
-        <div>
-          <p class="eyebrow">VOTRE ESPACE</p>
-          <h2>Nouvelle création</h2>
-        </div>
+        <div><p class="eyebrow">VOTRE ESPACE</p><h2 id="studioTitle">Nouvelle création</h2></div>
         <span class="status">● Mode expérimental</span>
       </div>
 
-      <div class="mode-selector">
-        <button type="button" id="textMode" class="mode active">
-          <span>✦</span>
-          <strong>Texte vers vidéo</strong>
-          <small>Décrire une scène</small>
+      <div class="mode-selector" role="group" aria-label="Mode de création">
+        <button type="button" id="textMode" class="mode active" aria-pressed="true">
+          <span aria-hidden="true">✦</span><strong>Texte vers vidéo</strong><small>Décrire une scène</small>
         </button>
-
-        <button type="button" id="imageMode" class="mode">
-          <span>▧</span>
-          <strong>Image vers vidéo</strong>
-          <small>Animer une image</small>
+        <button type="button" id="imageMode" class="mode" aria-pressed="false">
+          <span aria-hidden="true">▧</span><strong>Image vers vidéo</strong><small>Animer une image</small>
         </button>
       </div>
 
       <div class="field">
         <label for="prompt">Décrivez votre vidéo</label>
-        <textarea
-          id="prompt"
-          maxlength="1500"
-          rows="5"
-          placeholder="Exemple : Un magnifique paysage japonais au coucher du soleil, des pétales de cerisier emportés par le vent, mouvement de caméra cinématographique..."
-        ></textarea>
-        <div class="counter">
-          <span>Un prompt précis donne généralement un meilleur résultat.</span>
-          <span id="counter">0/1500</span>
-        </div>
+        <textarea id="prompt" maxlength="1500" rows="5" placeholder="Exemple : Un paysage japonais au coucher du soleil, des pétales de cerisier emportés par le vent, mouvement de caméra cinématographique..."></textarea>
+        <div class="counter"><span>Décrivez le sujet, le mouvement et l'ambiance.</span><span id="counter">0/1500</span></div>
       </div>
 
       <div id="imageSection" class="field hidden">
         <label for="imageInput">Votre image de départ</label>
         <div class="upload-zone" id="uploadZone">
-          <input
-            type="file"
-            id="imageInput"
-            accept="image/png,image/jpeg,image/webp"
-          >
-          <div id="uploadMessage">
-            <span class="upload-icon">＋</span>
-            <strong>Ajouter une image</strong>
-            <small>PNG, JPG ou WebP · 10 Mo maximum</small>
-          </div>
-          <img id="imagePreview" class="hidden" alt="Aperçu de votre image">
+          <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" aria-label="Choisir une image">
+          <div id="uploadMessage"><span class="upload-icon">＋</span><strong>Ajouter une image</strong><small>PNG, JPG ou WebP · 10 Mo maximum</small></div>
+          <img id="imagePreview" class="hidden" alt="Aperçu de l'image sélectionnée">
         </div>
-        <button type="button" id="removeImage" class="text-button hidden">
-          Supprimer l'image
-        </button>
+        <button type="button" id="removeImage" class="text-button hidden">Supprimer l'image</button>
       </div>
 
       <div class="field">
-        <label for="duration">Durée de la vidéo</label>
+        <label for="duration">Durée souhaitée</label>
         <select id="duration">
-          <option value="4">4 secondes</option>
-          <option value="5">5 secondes</option>
-          <option value="8">8 secondes</option>
-          <option value="10">10 secondes</option>
+          <option value="4">4 secondes</option><option value="5">5 secondes</option>
+          <option value="8">8 secondes</option><option value="10">10 secondes</option>
         </select>
-        <small class="field-help">
-          La durée réelle dépend des possibilités du modèle choisi.
-        </small>
+        <small class="field-help">La durée réellement produite dépend du modèle externe.</small>
       </div>
 
-      <div class="privacy-note">
-        <strong>Confidentialité</strong>
-        <p>
-          Votre prompt et, en mode image, votre image sont envoyés
-          au service public Hugging Face pour générer la vidéo.
-          N'envoyez pas de données privées ou sensibles.
-        </p>
-      </div>
+      <div class="privacy-note"><strong>À savoir avant de générer</strong><p>Votre prompt et, en mode image, votre image sont transmis au service Hugging Face sélectionné. N'envoyez pas de données personnelles ou confidentielles.</p></div>
 
-      <button type="button" id="generateButton" class="generate-button">
-        <span>✦</span> Générer ma vidéo
-      </button>
+      <button type="button" id="generateButton" class="generate-button"><span>✦</span> Générer ma vidéo</button>
+      <div id="notice" class="notice" role="status" aria-live="polite">Choisissez un mode et décrivez votre création.</div>
 
-      <div id="notice" class="notice" role="status" aria-live="polite">
-        Choisissez un mode et décrivez votre création.
-      </div>
-
-      <section id="resultSection" class="result hidden">
-        <h2>Votre vidéo</h2>
+      <section id="resultSection" class="result hidden" aria-labelledby="resultTitle">
+        <h2 id="resultTitle">Votre vidéo</h2>
         <video id="resultVideo" controls playsinline></video>
-        <a id="downloadLink" class="download-button" download="video-ai-studio.mp4">
-          Télécharger la vidéo
-        </a>
+        <a id="downloadLink" class="download-button" download="video-ai-studio.mp4">Télécharger la vidéo</a>
       </section>
     </section>
 
     <section class="info-section">
       <h2>Comment ça marche ?</h2>
-      <div class="info-card">
-        <span>01</span>
-        <div>
-          <strong>Imaginez</strong>
-          <p>Écrivez une description ou choisissez une image.</p>
-        </div>
-      </div>
-      <div class="info-card">
-        <span>02</span>
-        <div>
-          <strong>Générez</strong>
-          <p>Le modèle IA traite votre demande.</p>
-        </div>
-      </div>
-      <div class="info-card">
-        <span>03</span>
-        <div>
-          <strong>Téléchargez</strong>
-          <p>Visionnez et récupérez votre création vidéo.</p>
-        </div>
-      </div>
+      <div class="info-card"><span>01</span><div><strong>Imaginez</strong><p>Écrivez une description ou choisissez une image.</p></div></div>
+      <div class="info-card"><span>02</span><div><strong>Générez</strong><p>Le modèle IA traite votre demande, selon sa disponibilité.</p></div></div>
+      <div class="info-card"><span>03</span><div><strong>Téléchargez</strong><p>Visionnez et récupérez votre création si le service retourne une vidéo.</p></div></div>
     </section>
 
-    <footer>
-      <strong>VIDEO AI STUDIO</strong>
-      <p>Projet expérimental indépendant · V0.3</p>
-      <p>Les services gratuits peuvent être soumis à des files d'attente et des quotas.</p>
-    </footer>
+    <footer><strong>VIDEO AI STUDIO</strong><p>Projet expérimental indépendant · V0.4</p><p>Les services gratuits peuvent être soumis à des quotas, files d'attente et interruptions.</p></footer>
   </main>
-
-  <script type="module" src="app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
-          </html>
-  
+</html>
