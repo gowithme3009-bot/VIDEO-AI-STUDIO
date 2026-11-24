@@ -47,7 +47,6 @@ assert.match(html, /La barre indique une activité, pas un temps restant/, "La p
 assert.match(readme, /Dans les deux modes, les choix supérieurs à 5 secondes sont désactivés/, "Limites de durée non documentées.");
 
 new vm.Script(app.replace(/^import\s+.*;\s*/m, ""), { filename: "app.js" });
-console.log("OK — contrôles structurels et contrats API VIDEO AI STUDIO réussis.");
 
 assert.match(app, /QUOTA_STORAGE_KEY/, "La détection du quota doit être mémorisée localement.");
 assert.match(app, /QUOTA_COOLDOWN_MS = 24 \* 60 \* 60 \* 1000/, "Le blocage local doit durer 24 heures après détection.");
@@ -55,3 +54,5 @@ assert.match(app, /function isZeroGpuQuotaError/, "Les erreurs de quota ZeroGPU 
 assert.match(app, /rememberZeroGpuQuota\(\)/, "Le quota épuisé doit déclencher le verrouillage local.");
 assert.match(app, /Quota quotidien ZeroGPU épuisé/, "Un message explicite doit être affiché en cas de quota épuisé.");
 assert.match(app, /getQuotaCooldownRemaining\(\)/, "Les nouveaux essais doivent vérifier le délai de sécurité.");
+
+console.log("OK — contrôles structurels et contrats API VIDEO AI STUDIO réussis.");
