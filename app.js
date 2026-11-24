@@ -130,7 +130,7 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     for await (const event of submission) {
       if (event.type === "status") {
         const status = event.status;
-        const stage = event.stage || (status && typeof status === "object" ? status.stage : status);
+        const stage = event.stage || (status && typeof status === "object" ? (status.stage || status.status) : status);
         if (stage === "pending") {
           const position = event.position ?? (status && status.position);
           const queueInfo = Number.isFinite(position) ? " Position dans la file : " + (position + 1) + "." : "";
