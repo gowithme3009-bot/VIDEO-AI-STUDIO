@@ -57,14 +57,14 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
 
   function updateDurationOptions() {
     Array.from(duration.options).forEach((option) => {
-      option.disabled = mode === "text" && Number(option.value) > 5;
+      option.disabled = Number(option.value) > 5;
     });
     if (duration.selectedOptions[0] && duration.selectedOptions[0].disabled) {
       duration.value = "5";
     }
     durationHelp.textContent = mode === "text"
       ? "Le moteur texte vers vidéo accepte des clips de 1 à 5 secondes."
-      : defaultDurationHelp;
+      : "Le moteur image vers vidéo limite également les clips à 5 secondes maximum.";
   }
 
   function setMode(nextMode) {
