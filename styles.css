@@ -79,3 +79,31 @@ footer strong{color:var(--text);letter-spacing:1px}
   .mode{min-height:105px;padding:12px 9px}
   .counter{flex-direction:column;gap:3px}
 }
+
+
+/* Suivi de génération */
+.progress-panel{margin-top:14px;padding:16px;border:1px solid #8b7cff55;border-radius:13px;background:#8b7cff0d}
+.progress-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.progress-heading strong{font-size:13px}
+.live-indicator{padding:4px 8px;border-radius:20px;background:#8b7cff22;color:#c2baff;font-size:9px;font-weight:900;letter-spacing:1px}
+.progress-detail{margin:7px 0 13px;color:var(--muted);font-size:11px}
+.progress-track{height:9px;overflow:hidden;border-radius:20px;background:#ffffff16}
+.progress-bar{display:block;height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease}
+.progress-bar.is-indeterminate{position:relative;width:38%;animation:progress-pulse 1.7s ease-in-out infinite alternate}
+@keyframes progress-pulse{from{transform:translateX(-12%)}to{transform:translateX(170%)}}
+.progress-steps{display:flex;justify-content:space-between;gap:5px;margin:14px 0 0;padding:0;list-style:none}
+.progress-steps li{flex:1;color:#77839a;font-size:9px;text-align:center}
+.progress-steps li::before{content:"";display:block;width:8px;height:8px;margin:0 auto 6px;border-radius:50%;background:#536078}
+.progress-steps li.is-current{color:#c4bcff;font-weight:800}
+.progress-steps li.is-current::before{background:var(--accent);box-shadow:0 0 0 4px #8b7cff28}
+.progress-steps li.is-complete{color:var(--accent2)}
+.progress-steps li.is-complete::before{background:var(--accent2)}
+.progress-footnote{margin:12px 0 0;color:#8793a8;font-size:9px}
+.progress-panel.is-done{border-color:#4ed6a155}
+.progress-panel.is-done .live-indicator{background:#4ed6a122;color:var(--success)}
+.progress-panel.is-error{border-color:#ff6b7855}
+.progress-panel.is-error .live-indicator{background:#ff6b7822;color:#ff9ba4}
+.progress-panel.is-error .live-indicator::after{content:"";} 
+.progress-panel.is-error .live-indicator{font-size:0}
+.progress-panel.is-error .live-indicator::before{content:"ARRÊTÉ";font-size:9px}
+@media(max-width:420px){.progress-steps li{font-size:8px}.progress-panel{padding:13px}}
