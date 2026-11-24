@@ -19,6 +19,7 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
   const downloadLink = $("downloadLink");
   const progressPanel = $("progressPanel"), progressBar = $("progressBar");
   const progressTitle = $("progressTitle"), progressDetail = $("progressDetail");
+  const progressState = $("progressState");
   const progressSteps = Array.from(document.querySelectorAll("[data-progress-step]"));
 
   let mode = "text", selectedImage = null, imageObjectUrl = null, generating = false;
@@ -41,6 +42,7 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
     progressPanel.classList.toggle("is-done", stage === "done");
     progressTitle.textContent = labels[0];
     progressDetail.textContent = detail || labels[1];
+    progressState.textContent = stage === "done" ? "TERMINÉ" : stage === "error" ? "ARRÊTÉ" : "EN COURS";
     progressBar.classList.toggle("is-indeterminate", stage !== "done" && stage !== "error");
     progressBar.style.width = stage === "done" ? "100%" : stage === "error" ? "0%" : "38%";
     progressSteps.forEach((step) => {
@@ -149,7 +151,9 @@ import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client
         }
       } else if (event.type === "data" || event.type === "complete") {
         setProgress("receiving");
-        result = event.data;
+        // This endpoint returns one final result; stop consuming immediately to avoid
+        // waiting for an extra iterator event after Gradio has already sent the data.
+        return event.data;
       } else if (event.type === "error") {
         throw new Error(event.message || "Le service IA a rencontré une erreur.");
       }
